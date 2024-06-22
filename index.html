@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Earth with Text</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/libs/stats.min.js"></script>
+    <script>
+        let scene, camera, renderer, earth, textMesh, orbitRadius, angle;
+
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            
+            // Setup camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Earth texture
+            const textureLoader = new THREE.TextureLoader();
+            const earthTexture = textureLoader.load('earth.png'); // Path to your earth texture image
+
+            // Earth
+            const geometry = new THREE.SphereGeometry(1, 32, 32);
+            const material = new THREE.MeshBasicMaterial({ map: earthTexture });
+            earth = new THREE.Mesh(geometry, material);
+            scene.add(earth);
+
+            // Orbit radius for text
+            orbitRadius = 2;
+            angle = 0;
+
+            // Text
+            const loader = new THREE.FontLoader();
+            loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
+                const textGeometry = new THREE.TextGeometry('Lear Stříbro 2024 - 500 Km', {
+                    font: font,
+                    size: 0.2,
+                    height: 0.05,
+                });
+                const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.position.set(orbitRadius, 0, 0); // Position text on the orbit radius
+                scene.add(textMesh);
+            });
+
+            // Animation loop
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate Earth
+            earth.rotation.y += 0.01;
+
+            // Orbit text around Earth
+            if (textMesh) {
+                angle += 0.01;
+                textMesh.position.x = orbitRadius * Math.cos(angle);
+                textMesh.position.z = orbitRadius * Math.sin(angle);
+                textMesh.lookAt(earth.position);
+            }
+
+            // Render scene
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initialize scene
+        init();
+    </script>
+</body>
+</html>
